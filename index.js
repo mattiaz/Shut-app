@@ -8,13 +8,13 @@ Date.prototype.yyyymmdd = function() {
     var yyyy = this.getFullYear().toString();
     var mm = (this.getMonth()+1).toString();
     var dd = this.getDate().toString();
-    return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
+    return yyyy + '-' + (mm[1]?mm:'0'+mm[0]) + '-' + (dd[1]?dd:'0'+dd[0]);
 };
 Date.prototype.hhmmss = function() {
     var hh = this.getHours().toString();
     var mm = this.getMinutes().toString();
     var ss  = this.getSeconds().toString();
-    return (hh[1]?hh:"0"+hh[0]) + ':' + (mm[1]?mm:"0"+mm[0]) + ':' + (ss[1]?ss:"0"+ss[0]);
+    return (hh[1]?hh:'0'+hh[0]) + ':' + (mm[1]?mm:'0'+mm[0]) + ':' + (ss[1]?ss:'0'+ss[0]);
 };
 String.prototype.log = function() {
     var msg = this;
@@ -26,12 +26,13 @@ String.prototype.log = function() {
 //  REQUIRE, SETTINGS AND VARIABLES
 //
 
-var json_db       = require('node-json-db');
-var express       = require('express');
-var colors        = require('colors');
-var crypto        = require('crypto');
-var util          = require('util');
-var url           = require('url');
+var json_db = require('node-json-db');
+var express = require('express');
+var colors  = require('colors');
+var crypto  = require('crypto');
+var util    = require('util');
+var url     = require('url');
+var fs      = require('fs');
 
 var settings = {
     http: {
@@ -48,50 +49,63 @@ var app = express();
 var server = require('http').Server(app);
 
 // database users
-var db_users = new json_db("data/users", true, true);
+var db_users = new json_db('data/users', true, true);
 // database messages
-var db_messages = new json_db("data/messages");
+var db_messages = new json_db('data/messages');
 // database groups
-var db_groups = new json_db("data/groups");
+var db_groups = new json_db('data/groups');
+
+//
+//  FUNCTIONS
+//
 
 //
 //  HTTP SERVER
 //
 
-app.get('/', function(req, res){
-    res.status(200).end("<h1>Shut app - API</h1>");
+app.get('/', function(req, res) {
+    fs.readFile('index.html', 'utf8', function (error,data) {
+        if(error){
+            res.status(404).end('Missing index.html file but API is still operational');
+        }
+        else{
+            res.status(200).end(data);
+        }
+    });
 });
 
 app.post('/', function(req, res){
     res.status(200).end(JSON.stringify({
-        http: 200
+        http: 200,
+        message: 'Fing API help @ https://shut-app.herokuapp.com/'
     }));
 });
 
 app.post('/signup', function(req, res){
 
-    var username = req.body.username;
-    var password = req.body.password;
+    var username = req.body.username.toLowerCase();
+    var password = req.body.password.toLowerCase();
+    var exists   = 
 
-    if(username == "" || username == null || username.length > 16) {
-        res.status(333).end(JSON.stringify({
-            http: 333,
-            error: "Invalid username",
-            error_type: "username", 
+    if(username == '' || username == null || username.length > 16) {
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: 'username',
+            message: 'Invalid username', 
             username: username
         }));
     }
-    else if(password == "" || password == null){
-        res.status(333).end(JSON.stringify({
-            http: 333,
-            error: "Invalid password",
-            error_type: "password",
+    else if(password == '' || password == null){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: 'password',
+            message: 'Invalid password',
             username: username
         }));
     }
     else{
 
-        var salt = crypto.createHash('md5').update(password + new Date().getTime() + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)).digest('hex');
+        /*var salt = crypto.createHash('md5').update(password + new Date().getTime() + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)).digest('hex');
 
         username = username.toLowerCase();
         password = crypto.createHash('md5').update(password + salt).digest('hex');
@@ -103,7 +117,7 @@ app.post('/signup', function(req, res){
         }
         else{
             res.redirect('/signup#' + req.body.username);
-        }
+        }*/
     }
 
 });
@@ -111,7 +125,7 @@ app.post('/signup', function(req, res){
 // 404 page, if no match above
 app.get('*', function(req, res){
     res.status(404).end(JSON.stringify({
-        error: 404,
+        error: 'missing',
         http: 404
     }));
 });
@@ -119,12 +133,13 @@ app.get('*', function(req, res){
 // 500 error page, if something happens internaly
 app.use(function(error, req, res, next) {
     res.status(500).end(JSON.stringify({
-        error: 500,
+        error: 'internal',
+        stack: error.stack,
         http: 500
     }));
 });
 
 // start the server and listen on port setting
 server.listen(settings.http.port, function(){
-    ("running a server on port: " + settings.http.port.toString().yellow).log();
+    ('running a server on port: ' + settings.http.port.toString().yellow).log();
 });
