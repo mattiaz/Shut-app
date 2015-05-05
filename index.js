@@ -35,7 +35,7 @@ var url           = require('url');
 
 var settings = {
     http: {
-        port: 1337
+        port: process.env.PORT || 5000
     },
     app: {
         name: 'Shut app'
