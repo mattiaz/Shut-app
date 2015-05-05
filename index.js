@@ -85,7 +85,6 @@ app.post('/signup', function(req, res){
 
     var username = req.body.username.toLowerCase();
     var password = req.body.password.toLowerCase();
-    var exists   = 
 
     if(username == '' || username == null || username.length > 16) {
         res.status(400).end(JSON.stringify({
