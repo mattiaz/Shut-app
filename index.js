@@ -47,27 +47,80 @@ var app = express();
 // copy express app to standard http server
 var server = require('http').Server(app);
 
+// database users
+var db_users = new json_db("data/users", true, true);
+// database messages
+var db_messages = new json_db("data/messages");
+// database groups
+var db_groups = new json_db("data/groups");
+
 //
 //  HTTP SERVER
 //
 
 app.get('/', function(req, res){
-    res.status(404).end(JSON.stringify({
-        
+    res.status(200).end("<h1>Shut app - API</h1>");
+});
+
+app.post('/', function(req, res){
+    res.status(200).end(JSON.stringify({
+        http: 200
     }));
+});
+
+app.post('/signup', function(req, res){
+
+    var username = req.body.username;
+    var password = req.body.password;
+
+    if(username == "" || username == null || username.length > 16) {
+        res.status(333).end(JSON.stringify({
+            http: 333,
+            error: "Invalid username",
+            error_type: "username", 
+            username: username
+        }));
+    }
+    else if(password == "" || password == null){
+        res.status(333).end(JSON.stringify({
+            http: 333,
+            error: "Invalid password",
+            error_type: "password",
+            username: username
+        }));
+    }
+    else{
+
+        var salt = crypto.createHash('md5').update(password + new Date().getTime() + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)).digest('hex');
+
+        username = username.toLowerCase();
+        password = crypto.createHash('md5').update(password + salt).digest('hex');
+
+        var exist = json_save.get_user(username);
+        if(exist == null){
+            json_save.add_user(username, password, salt);
+            res.redirect('/#' + req.body.username);
+        }
+        else{
+            res.redirect('/signup#' + req.body.username);
+        }
+    }
+
 });
 
 // 404 page, if no match above
 app.get('*', function(req, res){
     res.status(404).end(JSON.stringify({
-        error: 404
+        error: 404,
+        http: 404
     }));
 });
 
 // 500 error page, if something happens internaly
 app.use(function(error, req, res, next) {
     res.status(500).end(JSON.stringify({
-        error: 500
+        error: 500,
+        http: 500
     }));
 });
 
