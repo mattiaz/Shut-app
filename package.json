@@ -1,0 +1,17 @@
+{
+    "name": "Shut_app",
+    "version": "1.0.0",
+    "description": "A simple chat API for node.js",
+    "author": "Mattias Ajander <mattias@ajander.se>",
+    "private": true,
+    "scripts": {
+        "start": "node index.js",
+        "debug": "node index.js --debug"
+    },
+    "dependencies": {
+        "colors": "^1.0.3",
+        "express": "^4.10.1",
+        "node-json-db": "^0.3.2"
+    },
+    "license": "MIT"
+}
