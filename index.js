@@ -29,7 +29,7 @@ String.prototype.log = function() {
 var json_db = require('node-json-db');
 var express = require('express');
 var colors  = require('colors');
-var crypto  = require('crypto');
+var bcrypt  = require('bcrypt-nodejs');
 var util    = require('util');
 var url     = require('url');
 var fs      = require('fs');
@@ -42,6 +42,10 @@ var settings = {
         name: 'Shut app'
     }
 };
+
+console.log(bcrypt.hashSync("bacon"));
+console.log(bcrypt.hashSync("bacon"));
+console.log(bcrypt.hashSync("bacon"));
 
 // the express app for the server
 var app = express();
@@ -77,7 +81,7 @@ app.get('/', function(req, res) {
 app.post('/', function(req, res){
     res.status(200).end(JSON.stringify({
         http: 200,
-        message: 'Fing API help @ https://shut-app.herokuapp.com/'
+        message: 'Find API help @ https://shut-app.herokuapp.com/'
     }));
 });
 
@@ -104,19 +108,8 @@ app.post('/signup', function(req, res){
     }
     else{
 
-        /*var salt = crypto.createHash('md5').update(password + new Date().getTime() + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)).digest('hex');
 
-        username = username.toLowerCase();
-        password = crypto.createHash('md5').update(password + salt).digest('hex');
 
-        var exist = json_save.get_user(username);
-        if(exist == null){
-            json_save.add_user(username, password, salt);
-            res.redirect('/#' + req.body.username);
-        }
-        else{
-            res.redirect('/signup#' + req.body.username);
-        }*/
     }
 
 });
