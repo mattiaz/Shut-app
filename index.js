@@ -26,26 +26,24 @@ String.prototype.log = function() {
 //  REQUIRE, SETTINGS AND VARIABLES
 //
 
-var json_db = require('node-json-db');
-var express = require('express');
-var colors  = require('colors');
-var bcrypt  = require('bcrypt-nodejs');
-var util    = require('util');
-var url     = require('url');
-var fs      = require('fs');
+var body_parser = require('body-parser');
+var json_db     = require('node-json-db');
+var express     = require('express');
+var colors      = require('colors');
+var bcrypt      = require('bcrypt-nodejs');
+var util        = require('util');
+var url         = require('url');
+var fs          = require('fs');
 
 var settings = {
     http: {
         port: process.env.PORT || 5000
     },
     app: {
-        name: 'Shut app'
+        name: 'Shut app',
+        salt_factor: 10
     }
 };
-
-console.log(bcrypt.hashSync("bacon"));
-console.log(bcrypt.hashSync("bacon"));
-console.log(bcrypt.hashSync("bacon"));
 
 // the express app for the server
 var app = express();
@@ -59,6 +57,12 @@ var db_messages = new json_db('data/messages');
 // database groups
 var db_groups = new json_db('data/groups');
 
+// body parser, parse incomming data to json
+app.use(body_parser.json());
+app.use(body_parser.urlencoded({
+    extended: true
+})); 
+
 //
 //  FUNCTIONS
 //
@@ -67,10 +71,13 @@ var db_groups = new json_db('data/groups');
 //  HTTP SERVER
 //
 
-app.get('/', function(req, res) {
+app.get('/', function(req, res, next) {
     fs.readFile('index.html', 'utf8', function (error,data) {
         if(error){
-            res.status(404).end('Missing index.html file but API is still operational');
+            var error = new Error("Missing index.html file, but API is still useable");
+            error.status = 404;
+            error.error = "missing"
+            next(error);
         }
         else{
             res.status(200).end(data);
@@ -78,23 +85,23 @@ app.get('/', function(req, res) {
     });
 });
 
-app.post('/', function(req, res){
+app.post('/', function(req, res, next){
     res.status(200).end(JSON.stringify({
         http: 200,
         message: 'Find API help @ https://shut-app.herokuapp.com/'
     }));
 });
 
-app.post('/signup', function(req, res){
+app.post('/signup', function(req, res, next){
 
-    var username = req.body.username.toLowerCase();
-    var password = req.body.password.toLowerCase();
+    var username = (req.body.username || "").toLowerCase();
+    var password = (req.body.password || "").toLowerCase();
 
     if(username == '' || username == null || username.length > 16) {
         res.status(400).end(JSON.stringify({
             http: 400,
             error: 'username',
-            message: 'Invalid username', 
+            message: 'Invalid username',
             username: username
         }));
     }
@@ -108,27 +115,50 @@ app.post('/signup', function(req, res){
     }
     else{
 
-
+        bcrypt.genSalt(settings.app.salt_factor, function(error, salt) {
+            if(error){
+                return next(new Error("Error generating salt"));
+            }
+            bcrypt.hash(password, salt, null, function(error, hash){
+                if(error){
+                    return next(new Error("Error generating hash"));
+                }
+                res.status(200).end(JSON.stringify({
+                    http: 200,
+                    hash: hash,
+                    salt: salt,
+                    username: username,
+                    message: "Account created"
+                }));
+            });
+        });
 
     }
 
 });
 
 // 404 page, if no match above
-app.get('*', function(req, res){
-    res.status(404).end(JSON.stringify({
-        error: 'missing',
-        http: 404
-    }));
+app.get('*', function(req, res, next){
+    var error = new Error("Missing page");
+    error.status = 404;
+    error.error = "missing"
+    next(error);
+});
+
+app.post('*', function(req, res, next){
+    var error = new Error("Missing page");
+    error.status = 404;
+    error.error = "missing"
+    next(error);
 });
 
 // 500 error page, if something happens internaly
 app.use(function(error, req, res, next) {
-    res.status(500).end(JSON.stringify({
-        error: 'internal',
-        stack: error.stack,
-        http: 500
-    }));
+    res.status(error.status || 500).end(JSON.stringify({
+        error: error.error || 'internal',
+        http: error.status || 500,
+        stack: error.stack || null
+    })); 
 });
 
 // start the server and listen on port setting
