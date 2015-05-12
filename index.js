@@ -22,6 +22,15 @@ String.prototype.log = function() {
     console.log('LOG'.cyan + ' [ ' + date.yyyymmdd().gray + ' | '.gray + date.hhmmss().gray + ' ]\n' + msg + '\n');
 };
 
+var guid = (function() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    }
+    return function() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    };
+})();
+
 //
 //  REQUIRE, SETTINGS AND VARIABLES
 //
@@ -115,23 +124,113 @@ app.post('/signup', function(req, res, next){
     }
     else{
 
-        bcrypt.genSalt(settings.app.salt_factor, function(error, salt) {
-            if(error){
-                return next(new Error("Error generating salt"));
-            }
-            bcrypt.hash(password, salt, null, function(error, hash){
+        try{
+            db_users.getData('/' + username);
+            res.status(400).end(JSON.stringify({
+                http: 400,
+                error: 'exists',
+                message: 'Username already taken',
+                username: username
+            }));
+        }
+        catch(error){
+            bcrypt.genSalt(settings.app.salt_factor, function(error, salt) {
                 if(error){
-                    return next(new Error("Error generating hash"));
+                    return next(new Error("Error generating salt"));
                 }
-                res.status(200).end(JSON.stringify({
-                    http: 200,
-                    hash: hash,
-                    salt: salt,
-                    username: username,
-                    message: "Account created"
-                }));
+                bcrypt.hash(password, salt, null, function(error, hash){
+                    if(error){
+                        return next(new Error("Error generating hash"));
+                    }
+                    
+                    var id = guid();
+                    var session = guid();
+
+                    db_users.push('/' + username, {
+                        username: username,
+                        password: hash,
+                        session: session,
+                        created: Math.round(new Date() / 1000),
+                        salt: salt,
+                        id: id
+                    });
+                    res.status(200).end(JSON.stringify({
+                        http: 200,
+                        username: username,
+                        session: session,
+                        id: id,
+                        message: "Account created"
+                    }));
+                });
             });
-        });
+        }
+
+    }
+
+});
+
+app.post('/login', function(req, res, next){
+
+    var username = (req.body.username || "").toLowerCase();
+    var password = (req.body.password || "").toLowerCase();
+
+    if(username == '' || username == null) {
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: 'username',
+            message: 'Invalid username',
+            username: username
+        }));
+    }
+    else if(password == '' || password == null){
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: 'password',
+            message: 'Invalid password',
+            username: username
+        }));
+    }
+    else{
+
+        try{
+            var user = db_users.getData('/' + username);
+
+            bcrypt.compare(password, user.password, function(error, result) {
+                if(error){
+                    return next(new Error("Error comparing hashes"));
+                }
+
+                if(!result){
+                    res.status(403).end(JSON.stringify({
+                        http: 403,
+                        error: 'login',
+                        message: "Invalid password or username",
+                        username: username
+                    }));
+                }
+                else{
+                    var session = guid();
+                    db_users.push('/' + username + '/session', session);
+
+                    res.status(200).end(JSON.stringify({
+                        http: 200,
+                        username: username,
+                        session: session,
+                        id: user.id,
+                        message: "Login successful"
+                    }));
+                }
+            });
+
+        }
+        catch(error){
+            res.status(403).end(JSON.stringify({
+                http: 403,
+                error: 'login',
+                message: 'Invalid password or username',
+                username: username
+            }));
+        }
 
     }
 

@@ -1,0 +1,18 @@
+{
+    "bosse": {
+        "username": "bosse",
+        "password": "$2a$10$TEwFfKMCfxappXUnRp6VOuQajZjfofMKrr/45TbnLxwjaVHWsNCwO",
+        "session": "28d0490f-e310-8d6e-57fd-a94c5254ad08",
+        "created": 1431427328,
+        "salt": "$2a$10$TEwFfKMCfxappXUnRp6VOu",
+        "id": "ef700d50-7e13-0de9-0770-e5515cc37ad3"
+    },
+    "kalle": {
+        "username": "kalle",
+        "password": "$2a$10$7u/1jRqEqd.plOMXV/rID.AwghCN1AucjMZ.NySvJKzXWlzT/0qO.",
+        "session": "5b7c30a6-9268-5ef8-ecca-d9049889076b",
+        "created": 1431427947,
+        "salt": "$2a$10$7u/1jRqEqd.plOMXV/rID.",
+        "id": "f9061c8a-5bb9-180e-18e1-daf63825c612"
+    }
+}
