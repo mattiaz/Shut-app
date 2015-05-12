@@ -22,14 +22,11 @@ String.prototype.log = function() {
     console.log('LOG'.cyan + ' [ ' + date.yyyymmdd().gray + ' | '.gray + date.hhmmss().gray + ' ]\n' + msg + '\n');
 };
 
-var guid = (function() {
-    function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-    }
-    return function() {
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    };
-})();
+function guid(len) {
+    var arr = new Uint8Array((len || 40) / 2);
+    window.crypto.getRandomValues(arr);
+    return [].map.call(arr, function(n) { return n.toString(16); }).join("");
+}
 
 //
 //  REQUIRE, SETTINGS AND VARIABLES
@@ -39,6 +36,7 @@ var body_parser = require('body-parser');
 var json_db     = require('node-json-db');
 var express     = require('express');
 var colors      = require('colors');
+var crypto      = require('crypto');
 var bcrypt      = require('bcrypt-nodejs');
 var util        = require('util');
 var url         = require('url');
@@ -70,7 +68,7 @@ var db_groups = new json_db('data/groups');
 app.use(body_parser.json());
 app.use(body_parser.urlencoded({
     extended: true
-})); 
+}));
 
 //
 //  FUNCTIONS
@@ -142,9 +140,8 @@ app.post('/signup', function(req, res, next){
                     if(error){
                         return next(new Error("Error generating hash"));
                     }
-                    
-                    var id = guid();
-                    var session = guid();
+
+                    var session = crypto.randomBytes(20).toString('hex');
 
                     db_users.push('/' + username, {
                         username: username,
@@ -152,13 +149,13 @@ app.post('/signup', function(req, res, next){
                         session: session,
                         created: Math.round(new Date() / 1000),
                         salt: salt,
-                        id: id
+                        id: ''
                     });
                     res.status(200).end(JSON.stringify({
                         http: 200,
                         username: username,
                         session: session,
-                        id: id,
+                        id: '',
                         message: "Account created"
                     }));
                 });
@@ -209,7 +206,7 @@ app.post('/login', function(req, res, next){
                     }));
                 }
                 else{
-                    var session = guid();
+                    var session = crypto.randomBytes(20).toString('hex');
                     db_users.push('/' + username + '/session', session);
 
                     res.status(200).end(JSON.stringify({
@@ -232,6 +229,17 @@ app.post('/login', function(req, res, next){
             }));
         }
 
+    }
+
+});
+
+app.post('/read/dm/:username', function(req, res, next){
+
+    var data = db_users.getData('/');
+
+    for(var user in data){
+        var id = data[user];
+        console.log(user);
     }
 
 });
