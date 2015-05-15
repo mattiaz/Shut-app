@@ -22,12 +22,6 @@ String.prototype.log = function() {
     console.log('LOG'.cyan + ' [ ' + date.yyyymmdd().gray + ' | '.gray + date.hhmmss().gray + ' ]\n' + msg + '\n');
 };
 
-function guid(len) {
-    var arr = new Uint8Array((len || 40) / 2);
-    window.crypto.getRandomValues(arr);
-    return [].map.call(arr, function(n) { return n.toString(16); }).join("");
-}
-
 //
 //  REQUIRE, SETTINGS AND VARIABLES
 //
@@ -38,7 +32,7 @@ var express     = require('express');
 var colors      = require('colors');
 var crypto      = require('crypto');
 var bcrypt      = require('bcrypt-nodejs');
-var util        = require('util');
+//var util        = require('util.js');
 var url         = require('url');
 var fs          = require('fs');
 
@@ -74,6 +68,26 @@ app.use(body_parser.urlencoded({
 //  FUNCTIONS
 //
 
+function getLastId(){
+    var data = db_users.getData('/');
+    var id = null;
+    for(var user in data){
+        user = data[user];
+        id = user.id;
+    }
+    return id;
+}
+
+function getUserById(id){
+    var data = db_users.getData('/');
+    for(var user in data){
+        user = data[user];
+        if(user.id == id)
+            return user.username;
+    }
+    return null;
+}
+
 //
 //  HTTP SERVER
 //
@@ -104,7 +118,9 @@ app.post('/signup', function(req, res, next){
     var username = (req.body.username || "").toLowerCase();
     var password = (req.body.password || "").toLowerCase();
 
-    if(username == '' || username == null || username.length > 16) {
+    var forbidden = ["null", "0", "admin", "administrator"];
+
+    if(username == '' || username == null || username.length > 16 || forbidden.indexOf(username) > -1) {
         res.status(400).end(JSON.stringify({
             http: 400,
             error: 'username',
@@ -141,21 +157,25 @@ app.post('/signup', function(req, res, next){
                         return next(new Error("Error generating hash"));
                     }
 
-                    var session = crypto.randomBytes(20).toString('hex');
+                    var timestamp = Math.round(new Date() / 1000);
+                    var session = crypto.createHash('md5').update('session' + timestamp.toString()).digest('hex');
+                    
+                    var id = getLastId() + 1 || 1;
+                    // var id = crypto.createHash('md5').update(timestamp.toString()).digest('hex');
 
                     db_users.push('/' + username, {
                         username: username,
                         password: hash,
                         session: session,
-                        created: Math.round(new Date() / 1000),
+                        created: timestamp,
                         salt: salt,
-                        id: ''
+                        id: id
                     });
                     res.status(200).end(JSON.stringify({
                         http: 200,
                         username: username,
                         session: session,
-                        id: '',
+                        id: id,
                         message: "Account created"
                     }));
                 });
@@ -166,7 +186,7 @@ app.post('/signup', function(req, res, next){
 
 });
 
-app.post('/login', function(req, res, next){
+app.post('/signin', function(req, res, next){
 
     var username = (req.body.username || "").toLowerCase();
     var password = (req.body.password || "").toLowerCase();
@@ -193,6 +213,7 @@ app.post('/login', function(req, res, next){
             var user = db_users.getData('/' + username);
 
             bcrypt.compare(password, user.password, function(error, result) {
+
                 if(error){
                     return next(new Error("Error comparing hashes"));
                 }
@@ -206,7 +227,10 @@ app.post('/login', function(req, res, next){
                     }));
                 }
                 else{
-                    var session = crypto.randomBytes(20).toString('hex');
+                    
+                    var timestamp = Math.round(new Date() / 1000);
+                    var session = crypto.createHash('md5').update('session' + timestamp.toString()).digest('hex');
+
                     db_users.push('/' + username + '/session', session);
 
                     res.status(200).end(JSON.stringify({
@@ -214,7 +238,7 @@ app.post('/login', function(req, res, next){
                         username: username,
                         session: session,
                         id: user.id,
-                        message: "Login successful"
+                        message: "Sign in successful"
                     }));
                 }
             });
@@ -233,14 +257,70 @@ app.post('/login', function(req, res, next){
 
 });
 
-app.post('/read/dm/:username', function(req, res, next){
-
-    var data = db_users.getData('/');
-
-    for(var user in data){
-        var id = data[user];
-        console.log(user);
+app.get('/user/id/:id', function(req, res, next){
+    var username = getUserById(req.params.id);
+    if(username == null){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            id: req.params.id,
+            message: "No user with this id"
+        }));
     }
+    try{
+        var data = db_users.getData('/' + username);
+    }
+    catch(error){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            id: req.params.id,
+            message: "No user with this id"
+        }));
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        id: data.id,
+        username: data.username,
+        created: data.created
+    }));
+
+});
+
+app.get('/user/:username', function(req, res, next){
+    try{
+        var data = db_users.getData('/' + req.params.username);
+    }
+    catch(error){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            username: req.params.username,
+            message: "No user with this username"
+        }));
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        id: data.id,
+        username: data.username,
+        created: data.created
+    }));
+});
+
+app.get('/read/dm/:username', function(req, res, next){
+
+    return next();
+
+});
+
+app.post('/dm/:username', function(req, res, next){
+
+    var id = req.params.id;
+    var users = db_users.getData('/');
+
+    return next();
 
 });
 

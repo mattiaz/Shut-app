@@ -19,7 +19,6 @@
               -ms-text-size-adjust: 100%;
               -webkit-text-size-adjust: 100%;
               color: #333;
-              overflow: hidden;
               font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif;
               font-size: 16px;
               line-height: 1.6;
@@ -662,10 +661,10 @@
     </head>
     <body class="markdown-body">
         <h1>Shut app - API</h1>
-        <h2><a href="https://www.hurl.it/">hurl.it</a></h2>
+        <h2>Postman</h2>
         <p>
-            A page to make http requests from, good for testing.
-            <br><a href="https://www.hurl.it/">https://www.hurl.it/</a>
+            An excellent tool to test the Shut app API with.
+            <br><a href="https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm">https://chrome.google.com/webstore/detail/postman-rest-client/fdmmgilgnpjigdojojpjoooidkmcomcm</a>
         </p>
         <h2>Error messages</h2>
         <pre>
@@ -685,6 +684,105 @@ missing  - Missing page
 login    - Invalid username or password
 internal - Internal server error
 exists   - Username already exists
+</pre>
+        
+        <h2>Sign up</h2>
+        <p>Sign up a new user with username and password and sign in, this will generate a session token.<br>POST to <a href="/signup">/signup</a>. GET will not work.</p>
+        <pre>
+POST /signup
+
+POST data:
+username
+password
+
+Responses:
+
+{
+    "http":     200,
+    "username": "arthur.dent",
+    "session":  "0635a0cb392bec66be613e239d5a8c9a",
+    "id":       42,
+    "message":  "Account created"
+}
+
+{
+    "http":     400,
+    "error":    "exists",
+    "message":  "Username already taken",
+    "username": "arthur.dent"
+}
+</pre>
+
+        <h2>Sign in</h2>
+        <p>Sign in a user with username and password, this will generate a session token.<br>POST to <a href="/signin">/signin</a>. GET will not work.</p>
+        <pre>
+POST /signin
+
+POST data:
+username
+password
+
+Responses:
+
+{
+    "http":     200,
+    "username": "arthur.dent",
+    "session":  "82a0767b1a024fe08f53ea44dd0810e3", 
+    "id":       42,
+    "message":  "Sign in successful"
+}
+
+{
+    "http":     403,
+    "error":    "login",
+    "message":  "Invalid password or username",
+    "username": "arthur.dent"
+}
+</pre>
+
+    <h2>Find user</h2>
+    <h3>Find user by username</h3>
+    <p>Find a user by username, returns id and when the account was created.<br>GET from <a href="/user/admin">/user/id/:username</a>. POST will not work.</p>
+    <pre>
+GET /user/:username
+
+Responses:
+
+{
+    "http":     200,
+    "id":       42,
+    "username": "arthur.dent",
+    "created":  1431708755
+}
+
+{
+    "http":     404,
+    "error":    "username",
+    "username": "ellen.ripley",
+    "message":  "No user with this username"
+}
+</pre>
+
+    <h3>Find user by id</h3>
+    <p>Find a user by id, returns username and when the account was created.<br>GET from <a href="/user/id/0">/user/id/:id</a>. POST will not work.</p>
+    <pre>
+GET /user/id/:id
+
+Responses:
+
+{
+    "http":     200,
+    "id":       42,
+    "username": "arthur.dent",
+    "created":  1431708755
+}
+
+{
+    "http":     404,
+    "error":    "username",
+    "id":       "1337",
+    "message":  "No user with this id"
+}
 </pre>
     </body>
 </html>

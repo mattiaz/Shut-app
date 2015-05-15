@@ -1,18 +1,10 @@
 {
-    "bosse": {
-        "username": "bosse",
-        "password": "$2a$10$6wV6o49uWYMu8c05dnFMCOwNqI7EIF0rzd63dxW6lL77UTETj6o7W",
-        "session": "78b393fe844e6911827df44aff79fd62edea3421",
-        "created": 1431433557,
-        "salt": "$2a$10$6wV6o49uWYMu8c05dnFMCO",
-        "id": ""
-    },
-    "kalle": {
-        "username": "kalle",
-        "password": "$2a$10$HUz9bfZaB/KkqsiM5NKT4u4j2b.RkG3Ntk6NnrYGS3mIP0CeZjAoK",
-        "session": "b0e785c88fd09eca8fae7d38206460678f4d48fe",
-        "created": 1431434450,
-        "salt": "$2a$10$HUz9bfZaB/KkqsiM5NKT4u",
-        "id": ""
+    "arthur.dent": {
+        "username": "arthur.dent",
+        "password": "$2a$10$Hs4wwRroGvkni8AHYQy.IuSQawIQVmeQBBbfUeX1xT1RcBf5j3v0G",
+        "session": "382ca3cb13393d542bbc04118a05328e",
+        "created": 1431708755,
+        "salt": "$2a$10$Hs4wwRroGvkni8AHYQy.Iu",
+        "id": 1
     }
 }
