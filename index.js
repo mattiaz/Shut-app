@@ -46,6 +46,8 @@ var settings = {
     }
 };
 
+var loadDB = true;
+
 // the express app for the server
 var app = express();
 // copy express app to standard http server
@@ -53,14 +55,12 @@ var server = require('http').Server(app);
 
 // database users
 var db_users = new json_db('data/users', true, true);
-db_users.getData('/')
+
 // database messages
-var db_messages = new json_db('data/messages');
-db_messages.getData('/')
+var db_messages = new json_db('data/messages', true, true);
+
 // database groups
-var db_groups = new json_db('data/groups');
-db_groups.getData('/')
-console.log('');
+var db_groups = new json_db('data/groups', true, true);
 
 // import data to util
 util.importUsers(db_users);
@@ -74,6 +74,17 @@ app.use(body_parser.urlencoded({
 //
 //  HTTP SERVER
 //
+
+app.use(function(res, req, next){
+    if(loadDB){
+        db_users.getData('/');
+        db_messages.getData('/');
+        db_groups.getData('/');
+        console.log('');
+        loadDB = false;
+    }
+    next();
+});
 
 app.get('/', function(req, res, next) {
     fs.readFile('index.html', 'utf8', function (error,data) {
