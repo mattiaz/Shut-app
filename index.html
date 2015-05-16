@@ -683,8 +683,31 @@ password - Invalid password
 session  - Invalid session, expired or missing
 missing  - Missing page
 login    - Invalid username or password
+data     - missing data in request
 internal - Internal server error
 exists   - Username already exists
+</pre>
+        <h2>Session errors</h2>
+        <p>Some request can cause session errors, here are two examples.</p>
+        <pre>
+{
+    "http":     400,
+    "error":    "session",
+    "session":  "0081542111a77c103d3c7424ebe06b5e",
+    "message":  "No user with this session"
+}
+
+{
+    "http":         403,
+    "error":        "session",
+    "id":           1,
+    "username":     "admin",
+    "created":      1431776234,
+    "session_age":  1431776435,
+    "expired":      true,
+    "session":      "0081542111a77c103d3c7424ebe06b5e",
+    "message":      "Your session has expired."
+}
 </pre>
         
         <h2>Sign up</h2>
@@ -772,17 +795,17 @@ GET /user/id/:id
 Responses:
 
 {
-    "http":     200,
-    "id":       42,
-    "username": "arthur.dent",
-    "created":  1429142400
+    "http":         200,
+    "id":           42,
+    "username":     "arthur.dent",
+    "created":      1429142400
 }
 
 {
-    "http":     404,
-    "error":    "username",
-    "id":       "1337",
-    "message":  "No user with this id"
+    "http":         404,
+    "error":        "username",
+    "id":           "1337",
+    "message":      "No user with this id"
 }
 </pre>
 
@@ -794,20 +817,62 @@ GET /session/:session
 Responses:
 
 {
-    "http":     200,
-    "id":       42,
-    "username": "arthur.dent",
-    "created":  1431726342,
-    "session_age": 1429143400,
-    "expired":  true,
-    "session":  "82a0767b1a024fe08f53ea44dd0810e3"
+    "http":         200,
+    "id":           42,
+    "username":     "arthur.dent",
+    "created":      1431726342,
+    "session_age":  1429143400,
+    "expired":      true,
+    "session":      "82a0767b1a024fe08f53ea44dd0810e3"
 }
 
 {
-    "http":     400,
-    "error":    "session",
-    "session":  "0635a0cb392bec66be613e239d5a8c9a",
-    "message":  "No user with this session"
+    "http":         400,
+    "error":        "session",
+    "session":      "0635a0cb392bec66be613e239d5a8c9a",
+    "message":      "No user with this session"
+}
+</pre>
+
+    <h2>Post message</h2>
+    <h3>Post DM (direct message)</h3>
+    <p>Post a message directly to a user, choose by sending a emote or a text message.<br>POST to <a href="/dm/1">/dm/:id</a>. GET will not work.</p>
+    <pre>
+POST /dm/:id
+
+Post data:
+session
+content_type (text / emote)
+data (the actual message content)
+
+Responses:
+
+{
+    "http":         200,
+    "from":         23,
+    "to":           47,
+    "id":           "3389ce932b2e0a7aea7376ab9f8539b2",
+    "timestamp":    1431776686,
+    "content_type": "text",
+    "type":         "dm",
+    "message":      "Message sent"
+}
+
+{
+    "http":         400,
+    "error":        "data",
+    "from":         23,
+    "to":           47,
+    "content_type": "",
+    "data":         "My mom always says life is like a box of chocolate.",
+    "message":      "Missing data in request"
+}
+
+{
+    "http":         404,
+    "error":        "username",
+    "id":           "1337",
+    "message":      "No user with this id"
 }
 </pre>
     </body>
