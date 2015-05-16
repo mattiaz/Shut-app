@@ -32,7 +32,7 @@ var express     = require('express');
 var colors      = require('colors');
 var crypto      = require('crypto');
 var bcrypt      = require('bcrypt-nodejs');
-//var util        = require('util.js');
+var util        = require('./util.js');
 var url         = require('url');
 var fs          = require('fs');
 
@@ -53,40 +53,23 @@ var server = require('http').Server(app);
 
 // database users
 var db_users = new json_db('data/users', true, true);
+db_users.getData('/')
 // database messages
 var db_messages = new json_db('data/messages');
+db_messages.getData('/')
 // database groups
 var db_groups = new json_db('data/groups');
+db_groups.getData('/')
+console.log('');
+
+// import data to util
+util.importUsers(db_users);
 
 // body parser, parse incomming data to json
 app.use(body_parser.json());
 app.use(body_parser.urlencoded({
     extended: true
 }));
-
-//
-//  FUNCTIONS
-//
-
-function getLastId(){
-    var data = db_users.getData('/');
-    var id = null;
-    for(var user in data){
-        user = data[user];
-        id = user.id;
-    }
-    return id;
-}
-
-function getUserById(id){
-    var data = db_users.getData('/');
-    for(var user in data){
-        user = data[user];
-        if(user.id == id)
-            return user.username;
-    }
-    return null;
-}
 
 //
 //  HTTP SERVER
@@ -118,7 +101,7 @@ app.post('/signup', function(req, res, next){
     var username = (req.body.username || "").toLowerCase();
     var password = (req.body.password || "").toLowerCase();
 
-    var forbidden = ["null", "0", "admin", "administrator"];
+    var forbidden = ["null", "0", "username", "user", "password", "id"];
 
     if(username == '' || username == null || username.length > 16 || forbidden.indexOf(username) > -1) {
         res.status(400).end(JSON.stringify({
@@ -160,16 +143,17 @@ app.post('/signup', function(req, res, next){
                     var timestamp = Math.round(new Date() / 1000);
                     var session = crypto.createHash('md5').update('session' + timestamp.toString()).digest('hex');
                     
-                    var id = getLastId() + 1 || 1;
+                    var id = util.getLastId() + 1 || 1;
                     // var id = crypto.createHash('md5').update(timestamp.toString()).digest('hex');
 
                     db_users.push('/' + username, {
+                        id: id,
+                        created: timestamp,
                         username: username,
                         password: hash,
-                        session: session,
-                        created: timestamp,
                         salt: salt,
-                        id: id
+                        session: session,
+                        session_age: timestamp
                     });
                     res.status(200).end(JSON.stringify({
                         http: 200,
@@ -232,6 +216,7 @@ app.post('/signin', function(req, res, next){
                     var session = crypto.createHash('md5').update('session' + timestamp.toString()).digest('hex');
 
                     db_users.push('/' + username + '/session', session);
+                    db_users.push('/' + username + '/session_age', timestamp);
 
                     res.status(200).end(JSON.stringify({
                         http: 200,
@@ -258,7 +243,7 @@ app.post('/signin', function(req, res, next){
 });
 
 app.get('/user/id/:id', function(req, res, next){
-    var username = getUserById(req.params.id);
+    var username = util.getUserById(req.params.id);
     if(username == null){
         res.status(404).end(JSON.stringify({
             http: 404,
@@ -309,7 +294,36 @@ app.get('/user/:username', function(req, res, next){
     }));
 });
 
-app.get('/read/dm/:username', function(req, res, next){
+app.get('/session/:session', function(req, res, next){
+
+    try{
+        var session = (req.params.session || "").toLowerCase();
+        var username = util.getUserBySession(session);
+
+        var data = db_users.getData('/' + username);
+        var expired = util.sessionExpired(username);
+
+        res.status(200).end(JSON.stringify({
+            http: 200,
+            id: data.id,
+            username: data.username,
+            created: data.created,
+            session_age: data.session_age,
+            expired: expired,
+            session: session
+        }));
+    }
+    catch(error){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: "session",
+            session: session,
+            message: "No user with this session"
+        }));
+    }
+});
+
+app.get('/dm/:username', function(req, res, next){
 
     return next();
 

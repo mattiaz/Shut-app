@@ -680,6 +680,7 @@
 
 username - Invalid username
 password - Invalid password
+session  - Invalid session, expired or missing
 missing  - Missing page
 login    - Invalid username or password
 internal - Internal server error
@@ -752,7 +753,7 @@ Responses:
     "http":     200,
     "id":       42,
     "username": "arthur.dent",
-    "created":  1431708755
+    "created":  1429142400
 }
 
 {
@@ -774,7 +775,7 @@ Responses:
     "http":     200,
     "id":       42,
     "username": "arthur.dent",
-    "created":  1431708755
+    "created":  1429142400
 }
 
 {
@@ -782,6 +783,31 @@ Responses:
     "error":    "username",
     "id":       "1337",
     "message":  "No user with this id"
+}
+</pre>
+
+    <h3>Find user by session</h3>
+    <p>Find a user by session, returns username if the session is expired.<br>GET from <a href="/session/a56b332a73541331b39f05adc85399fa">/session/:session</a>. POST will not work.</p>
+    <pre>
+GET /session/:session
+
+Responses:
+
+{
+    "http":     200,
+    "id":       42,
+    "username": "arthur.dent",
+    "created":  1431726342,
+    "session_age": 1429143400,
+    "expired":  true,
+    "session":  "82a0767b1a024fe08f53ea44dd0810e3"
+}
+
+{
+    "http":     400,
+    "error":    "session",
+    "session":  "0635a0cb392bec66be613e239d5a8c9a",
+    "message":  "No user with this session"
 }
 </pre>
     </body>
