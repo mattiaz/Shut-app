@@ -834,6 +834,36 @@ Responses:
 }
 </pre>
 
+    <h3>Search user</h3>
+    <p>Search from all users, returns an array of all matching usernames.<br>GET from <a href="/user/search/admin">/user/search/:username</a>. POST will not work.</p>
+    <pre>
+GET /user/search/:username
+
+Responses:
+
+{
+    "http": 200,
+    "search": "fro",
+    "results": [
+        "frodo.bagger",
+        "kermit.frog"
+    ]
+}
+
+{
+    "http": 200,
+    "search": "",
+    "results": [
+        "admin",
+        "arthur.dent",
+        "ellen.ripley",
+        "frodo.bagger",
+        "kermit.frog",
+        ...
+    ]
+}
+</pre>
+
     <h2>Post message</h2>
     <h3>Post DM (direct message)</h3>
     <p>Post a message directly to a user, choose by sending a emote or a text message.<br>POST to <a href="/dm/1">/dm/:id</a>. GET will not work.</p>
