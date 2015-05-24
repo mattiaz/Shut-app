@@ -838,8 +838,8 @@ app.post('*', function(req, res, next){
 app.use(function(error, req, res, next) {
     res.status(error.status || 500).end(JSON.stringify({
         error: error.error || 'internal',
-        http: error.status || 500,
-        stack: error.stack || null
+        http: error.status || 500/*,
+        stack: error.stack || null*/
     })); 
 });
 
