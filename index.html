@@ -741,7 +741,7 @@ Responses:
 </pre>
 
         <h2>Sign in</h2>
-        <p>Sign in a user with username and password, this will generate a session token.<br>POST to <a href="/signin">/signin</a>. GET will not work.</p>
+        <p>Sign in a user with username and password, this will generate a session token.<br>POST to <a href="/signin">/signin</a>. GET will not work. Session will be active for 7 days.</p>
         <pre>
 POST /signin
 
@@ -957,6 +957,66 @@ Responses:
     "error":        "username",
     "id":           "1337",
     "message":      "No user with this id"
+}
+</pre>
+
+    <h2>Friends</h2>
+    <p>Friends are a easy way to save contacts, just add a user to your list and the clients can load pre load all contacts from this list.</p>
+    <h3>Get friends</h3>
+    <p>Get all user id:s for your friends.<br>GET from <a href="/friends?session=3389ce932b2e0a7aea7376ab9f8539b2">/friends?session=:session</a>. POST will not work.</p>
+    <pre>
+GET /friends
+
+Get data (?param=&lt;data&gt;):
+session
+
+Responses:
+
+{
+    "http": 200,
+    "user": 1,
+    "friends": [
+        2,
+        4,
+        9
+    ],
+    "message": "Friends listed"
+}
+</pre>
+
+    <h3>Add friend</h3>
+    <p>Add a contact to your list.<br>POST to <a href="/friends/add/1337">/friends/add/:id</a>. GET will not work.</p>
+    <pre>
+POST /friends/add/:id
+
+Post data:
+session
+
+Responses:
+
+{
+    "http": 200,
+    "user": 1,
+    "friend": 2,
+    "message": "Friend added"
+}
+</pre>
+
+    <h3>Remove friend</h3>
+    <p>Remove a contact from your list.<br>POST to <a href="/friends/remove/1337">/friends/remove/:id</a>. GET will not work.</p>
+    <pre>
+POST /friends/remove/:id
+
+Post data:
+session
+
+Responses:
+
+{
+    "http": 200,
+    "user": 1,
+    "friend": 2,
+    "message": "Friend removed"
 }
 </pre>
 

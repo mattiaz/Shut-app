@@ -21,6 +21,15 @@ String.prototype.log = function() {
     var date = new Date();
     console.log('LOG'.cyan + ' [ ' + date.yyyymmdd().gray + ' | '.gray + date.hhmmss().gray + ' ]\n' + msg + '\n');
 };
+Array.prototype.removeByValue = function(val) {
+    for (var i = 0; i < this.length; i++) {
+        if (this[i] === val) {
+            this.splice(i, 1);
+            i--;
+        }
+    }
+    return this;
+}
 
 //
 //  REQUIRE, SETTINGS AND VARIABLES
@@ -597,6 +606,188 @@ app.post('/dm/:id', function(req, res, next){
         }));
         return;
     }
+
+
+});
+
+app.get('/friends', function(req, res, next){
+
+    try{
+        var session = (req.query.session || "").toLowerCase();
+        var contact = util.getUserBySession(session);
+            contact = db_users.getData('/' + contact);
+        var expired = util.sessionExpired(contact.username);
+    }
+    catch(error){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: "session",
+            session: session,
+            message: "No user with this session"
+        }));
+        return;
+    }
+
+    if(expired){
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: "session",
+            id: contact.id,
+            username: contact.username,
+            created: contact.created,
+            session_age: contact.session_age,
+            expired: expired,
+            session: session,
+            message: "Your session has expired."
+        }));
+        return;
+    }
+
+    var friends;
+    try{
+        friends = db_groups.getData('/' + contact.username);
+    }
+    catch(error){
+        friends = [];
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        user: contact.id,
+        friends: friends,
+        message: "Friends listed"
+    }));
+
+});
+
+app.post('/friends/add/:id', function(req, res, next){
+    try{
+        var session = (req.body.session || "").toLowerCase();
+        var contact = util.getUserBySession(session);
+            contact = db_users.getData('/' + contact);
+        var expired = util.sessionExpired(contact.username);
+    }
+    catch(error){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: "session",
+            session: session,
+            message: "No user with this session"
+        }));
+        return;
+    }
+
+    if(expired){
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: "session",
+            id: contact.id,
+            username: contact.username,
+            created: contact.created,
+            session_age: contact.session_age,
+            expired: expired,
+            session: session,
+            message: "Your session has expired."
+        }));
+        return;
+    }
+
+    var friend = util.getUserById(req.params.id);
+
+    if(friend == null){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            id: req.params.id,
+            message: "No user with this id"
+        }));
+        return;
+    }
+    else{
+        friend = db_users.getData('/' + friend);
+    }
+
+    try{
+        var friends = db_groups.getData('/' + contact.username);
+        if(friends.indexOf(friend.id) == -1)
+            friends.push(friend.id);
+        db_groups.push('/' + contact.username, friends);
+    }
+    catch(error){
+        db_groups.push('/' + contact.username, [friend.id]);
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        user: contact.id,
+        friend: friend.id,
+        message: "Friend added"
+    }));
+
+});
+
+app.post('/friends/remove/:id', function(req, res, next){
+    try{
+        var session = (req.body.session || "").toLowerCase();
+        var contact = util.getUserBySession(session);
+            contact = db_users.getData('/' + contact);
+        var expired = util.sessionExpired(contact.username);
+    }
+    catch(error){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: "session",
+            session: session,
+            message: "No user with this session"
+        }));
+        return;
+    }
+
+    if(expired){
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: "session",
+            id: contact.id,
+            username: contact.username,
+            created: contact.created,
+            session_age: contact.session_age,
+            expired: expired,
+            session: session,
+            message: "Your session has expired."
+        }));
+        return;
+    }
+
+    var friend = util.getUserById(req.params.id);
+
+    if(friend == null){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            id: req.params.id,
+            message: "No user with this id"
+        }));
+        return;
+    }
+    else{
+        friend = db_users.getData('/' + friend);
+    }
+
+    try{
+        var friends = db_groups.getData('/' + contact.username);
+        friends.removeByValue(friend.id);
+        db_groups.push('/' + contact.username, friends);
+    }
+    catch(error){
+        
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        user: contact.id,
+        friend: friend.id,
+        message: "Friend removed"
+    }));
 
 
 });

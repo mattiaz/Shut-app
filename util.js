@@ -68,7 +68,7 @@ module.exports = {
         var now = Math.round(new Date() / 1000);
         var old = user.session_age;
 
-        if(now - old > 60*60*24*30)
+        if(now - old > 60*60*24*7)
             return true;
         else
             return false;
