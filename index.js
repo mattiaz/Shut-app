@@ -341,10 +341,10 @@ app.get('/user/:username', function(req, res, next){
     }));
 });
 
-app.get('/session/:session', function(req, res, next){
+app.get('/session', function(req, res, next){
 
     try{
-        var session = (req.params.session || "").toLowerCase();
+        var session = (req.query.session || "").toLowerCase();
         var username = util.getUserBySession(session);
 
         var data = db_users.getData('/' + username);
@@ -373,7 +373,140 @@ app.get('/session/:session', function(req, res, next){
 
 app.get('/dm/:id', function(req, res, next){
 
-    
+    try{
+        var session = (req.query.session || "").toLowerCase();
+        var receiver = util.getUserBySession(session);
+            receiver = db_users.getData('/' + receiver);
+        var expired = util.sessionExpired(receiver.username);
+    }
+    catch(error){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: "session",
+            session: session,
+            message: "No user with this session"
+        }));
+        return;
+    }
+
+    if(expired){
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: "session",
+            id: receiver.id,
+            username: receiver.username,
+            created: receiver.created,
+            session_age: receiver.session_age,
+            expired: expired,
+            session: session,
+            message: "Your session has expired."
+        }));
+        return;
+    }
+
+    var sender = util.getUserById(req.params.id);
+
+    if(sender == null){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            id: req.params.id,
+            message: "No user with this id"
+        }));
+        return;
+    }
+    else{
+        sender = db_users.getData('/' + sender);
+    }
+
+    var messages = db_messages.getData('/');
+    var result = {};
+
+    for(timestamp in messages){
+        var message = messages[timestamp];
+
+        if(message.from == sender.id && message.to == receiver.id || message.from == receiver.id && message.to == sender.id)
+            result[timestamp] = messages[timestamp];
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        message: "Reading all messages with this user",
+        from: sender.id,
+        to: receiver.id,
+        data: result
+    }));
+
+});
+
+app.get('/dm/:id/:timestamp', function(req, res, next){
+
+    try{
+        var session = (req.query.session || "").toLowerCase();
+        var receiver = util.getUserBySession(session);
+            receiver = db_users.getData('/' + receiver);
+        var expired = util.sessionExpired(receiver.username);
+    }
+    catch(error){
+        res.status(400).end(JSON.stringify({
+            http: 400,
+            error: "session",
+            session: session,
+            message: "No user with this session"
+        }));
+        return;
+    }
+
+    if(expired){
+        res.status(403).end(JSON.stringify({
+            http: 403,
+            error: "session",
+            id: receiver.id,
+            username: receiver.username,
+            created: receiver.created,
+            session_age: receiver.session_age,
+            expired: expired,
+            session: session,
+            message: "Your session has expired."
+        }));
+        return;
+    }
+
+    var sender = util.getUserById(req.params.id);
+    var time = req.params.timestamp;
+
+    if(sender == null){
+        res.status(404).end(JSON.stringify({
+            http: 404,
+            error: "username",
+            id: req.params.id,
+            message: "No user with this id"
+        }));
+        return;
+    }
+    else{
+        sender = db_users.getData('/' + sender);
+    }
+
+    var messages = db_messages.getData('/');
+    var result = {};
+
+    for(timestamp in messages){
+        var message = messages[timestamp];
+
+        if(message.timestamp >= time)
+            if(message.from == sender.id && message.to == receiver.id || message.from == receiver.id && message.to == sender.id)
+                result[timestamp] = messages[timestamp];
+    }
+
+    res.status(200).end(JSON.stringify({
+        http: 200,
+        message: "Reading all messages with this user",
+        timestamp: time,
+        from: sender.id,
+        to: receiver.id,
+        data: result
+    }));
 
 });
 

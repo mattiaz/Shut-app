@@ -709,6 +709,9 @@ exists   - Username already exists
     "message":      "Your session has expired."
 }
 </pre>
+
+        <h2>Messages</h2>
+        <p>There is two types of messages, <code>content_type:</code> <code>text</code> or <code>emote</code>. Text just means plain text, but emote will be rendered in a special way. It's possible to send any emote but it's good to have a list too choose from, so all clients talking to the API can render the same emote.</p>
         
         <h2>Sign up</h2>
         <p>Sign up a new user with username and password and sign in, this will generate a session token.<br>POST to <a href="/signup">/signup</a>. GET will not work.</p>
@@ -810,9 +813,12 @@ Responses:
 </pre>
 
     <h3>Find user by session</h3>
-    <p>Find a user by session, returns username if the session is expired.<br>GET from <a href="/session/a56b332a73541331b39f05adc85399fa">/session/:session</a>. POST will not work.</p>
+    <p>Find a user by session, returns username if the session is expired.<br>GET from <a href="/session?session=a56b332a73541331b39f05adc85399fa">/session?session=:session</a>. POST will not work.</p>
     <pre>
-GET /session/:session
+GET /session
+
+Get data (?param=&lt;data&gt;):
+session
 
 Responses:
 
@@ -905,5 +911,54 @@ Responses:
     "message":      "No user with this id"
 }
 </pre>
+
+    <h2>Read messages</h2>
+    <h3>Read DM (direct message)</h3>
+    <p>Read all messages from a user or just the latest messages after a certain timestamp.<br>GET from <a href="/dm/1?session=3389ce932b2e0a7aea7376ab9f8539b2">/dm/:id?session=:session</a>. POST will not work.<br>GET from <a href="/dm/1/1432465821?session=3389ce932b2e0a7aea7376ab9f8539b2">/dm/:id/:timestamp?session=:session</a>. POST will not work.</p>
+    <pre>
+GET /dm/:id
+or
+GET /dm/:id/:timestamp
+
+Get data (?param=&lt;data&gt;):
+session
+
+Responses:
+
+{
+    "http": 200,
+    "message": "Reading all messages from this user",
+    "from": 1,
+    "to": 2,
+    "data": {
+        "1432465821": {
+            "id": "322e1bedc5b818f8a827e0ba9c7c62a9",
+            "timestamp": 1432465821,
+            "type": "dm",
+            "content_type": "text",
+            "data": "Hello World",
+            "from": 2,
+            "to": 1
+        },
+        "1432466147": {
+            "id": "1bfefe5959671eade15dc0545e72b4ee",
+            "timestamp": 1432466147,
+            "type": "dm",
+            "content_type": "text",
+            "data": "Hi!",
+            "from": 1,
+            "to": 2
+        }
+    }
+}
+
+{
+    "http":         404,
+    "error":        "username",
+    "id":           "1337",
+    "message":      "No user with this id"
+}
+</pre>
+
     </body>
 </html>
