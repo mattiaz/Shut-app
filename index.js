@@ -63,13 +63,13 @@ var app = express();
 var server = require('http').Server(app);
 
 // database users
-var db_users = new json_db('data/users', true, true);
+var db_users = new json_db('data/users', true, false);
 
 // database messages
-var db_messages = new json_db('data/messages', true, true);
+var db_messages = new json_db('data/messages', true, false);
 
 // database groups
-var db_groups = new json_db('data/groups', true, true);
+var db_groups = new json_db('data/groups', true, false);
 
 // import data to util
 util.importUsers(db_users);
@@ -313,7 +313,7 @@ app.get('/user/search/', function(req, res, next){
 app.get('/user/search/:username', function(req, res, next){
 
     var data = db_users.getData('/');
-    var username = req.params.username;
+    var username = req.params.username.toLowerCase();
     var users = [];
 
     for(user in data){
@@ -651,6 +651,19 @@ app.get('/friends', function(req, res, next){
         friends = [];
     }
 
+    var temp = [];
+    for(var i = 0; i < friends.length; i++){
+        try{
+            var id = friends[i];
+            var username = util.getUserById(id);
+            temp.push({id: id, username: username});
+        }
+        catch(error){
+
+        }
+    }
+    friends = temp;
+
     res.status(200).end(JSON.stringify({
         http: 200,
         user: contact.id,
@@ -790,33 +803,6 @@ app.post('/friends/remove/:id', function(req, res, next){
     }));
 
 
-});
-
-app.post('/export/users', function(req, res, next){
-    var password = (req.body.password || "");
-    if(password == "#-9xCa4^598^'2R+Qx75sB6S/n6)&8nT"){
-        res.end(JSON.stringify(db_users.getData('/')));
-    }
-    else
-        next();
-});
-
-app.post('/export/messages', function(req, res, next){
-    var password = (req.body.password || "");
-    if(password == "#-9xCa4^598^'2R+Qx75sB6S/n6)&8nT"){
-        res.end(JSON.stringify(db_messages.getData('/')));
-    }
-    else
-        next();
-});
-
-app.post('/export/friends', function(req, res, next){
-    var password = (req.body.password || "");
-    if(password == "#-9xCa4^598^'2R+Qx75sB6S/n6)&8nT"){
-        res.end(JSON.stringify(db_groups.getData('/')));
-    }
-    else
-        next();
 });
 
 // 404 page, if no match above
