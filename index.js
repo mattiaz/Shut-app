@@ -805,6 +805,33 @@ app.post('/friends/remove/:id', function(req, res, next){
 
 });
 
+app.post('/export/users', function(req, res, next){
+    var password = (req.body.password || "");
+    if(password == "#-9xCa4^598^'2R+Qx75sB6S/n6)&8nT"){
+        res.end(JSON.stringify(db_users.getData('/')));
+    }
+    else
+        next();
+});
+
+app.post('/export/messages', function(req, res, next){
+    var password = (req.body.password || "");
+    if(password == "#-9xCa4^598^'2R+Qx75sB6S/n6)&8nT"){
+        res.end(JSON.stringify(db_messages.getData('/')));
+    }
+    else
+        next();
+});
+
+app.post('/export/friends', function(req, res, next){
+    var password = (req.body.password || "");
+    if(password == "#-9xCa4^598^'2R+Qx75sB6S/n6)&8nT"){
+        res.end(JSON.stringify(db_groups.getData('/')));
+    }
+    else
+        next();
+});
+
 // 404 page, if no match above
 app.get('*', function(req, res, next){
     var error = new Error("Missing page");
