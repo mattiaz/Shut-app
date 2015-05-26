@@ -92,6 +92,11 @@ app.use(function(res, req, next){
         console.log('');
         loadDB = false;
     }
+
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
     next();
 });
 
